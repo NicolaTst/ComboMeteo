@@ -12,33 +12,39 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
       - name: Scarica il progetto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Installa Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Configura Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
+      - name: Prepara Gradle
+        run: |
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o gradle.zip
+          unzip -q gradle.zip -d "$HOME"
+          echo "$HOME/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Configura Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Installa componenti Android
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Verifica Android SDK
+        run: |
+          echo "Android SDK:"
+          ls "$ANDROID_HOME/platforms"
+          echo "Build tools:"
+          ls "$ANDROID_HOME/build-tools"
 
       - name: Compila ComboMeteo
         run: gradle assembleDebug
 
-      - name: Salva il file APK
+      - name: Salva APK
         uses: actions/upload-artifact@v4
         with:
           name: ComboMeteo-APK
